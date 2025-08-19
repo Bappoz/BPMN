@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_MEIReal"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="ProcessoMEIReal" name="Processo Real de Abertura MEI" isExecutable="true">
+
+    <!-- INÍCIO -->
+    <bpmn:startEvent id="Start_SolicitacaoMEI" name="Cliente solicita MEI"/>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_SolicitacaoMEI" targetRef="Task_VerificarRequisitos"/>
+
+    <!-- VERIFICAR REQUISITOS -->
+    <bpmn:task id="Task_VerificarRequisitos" name="Verificar requisitos do cliente"/>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_VerificarRequisitos" targetRef="Gateway_PodeSerMEI"/>
+
+    <!-- GATEWAY: PODE SER MEI? -->
+    <bpmn:exclusiveGateway id="Gateway_PodeSerMEI" name="Atende requisitos MEI?" default="Flow_4"/>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Gateway_PodeSerMEI" targetRef="End_NaoPodeMEI">
+      <bpmn:conditionExpression><![CDATA[${podeSerMEI == false}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Gateway_PodeSerMEI" targetRef="Task_CriarContaGovBr"/>
+
+    <!-- CRIAR/VERIFICAR CONTA GOV.BR -->
+    <bpmn:userTask id="Task_CriarContaGovBr" name="Criar/verificar conta gov.br do cliente"/>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_CriarContaGovBr" targetRef="Task_DefinirAtividade"/>
+
+    <!-- DEFINIR ATIVIDADE -->
+    <bpmn:task id="Task_DefinirAtividade" name="Definir atividade econômica (CNAE)"/>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_DefinirAtividade" targetRef="Task_DefinirEndereco"/>
+
+    <!-- DEFINIR ENDEREÇO -->
+    <bpmn:task id="Task_DefinirEndereco" name="Definir endereço (residencial ou comercial)"/>
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Task_DefinirEndereco" targetRef="Gateway_PrecisaLicenca"/>
+
+    <!-- GATEWAY: PRECISA DE LICENÇA? -->
+    <bpmn:exclusiveGateway id="Gateway_PrecisaLicenca" name="Atividade precisa licença municipal?" default="Flow_9"/>
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Gateway_PrecisaLicenca" targetRef="Task_OrientarLicenca">
+      <bpmn:conditionExpression><![CDATA[${precisaLicenca == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Gateway_PrecisaLicenca" targetRef="Task_PreencherPortal"/>
+
+    <!-- ORIENTAR SOBRE LICENÇA -->
+    <bpmn:task id="Task_OrientarLicenca" name="Orientar cliente sobre licenças necessárias"/>
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_OrientarLicenca" targetRef="Task_PreencherPortal"/>
+
+    <!-- PREENCHER PORTAL DO EMPREENDEDOR -->
+    <bpmn:serviceTask id="Task_PreencherPortal" name="Preencher dados no Portal do Empreendedor"/>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_PreencherPortal" targetRef="Task_GerarCNPJ"/>
+
+    <!-- GERAR CNPJ -->
+    <bpmn:serviceTask id="Task_GerarCNPJ" name="Gerar CNPJ automaticamente (gratuito)"/>
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_GerarCNPJ" targetRef="Task_EnviarDocumentos"/>
+
+    <!-- ENVIAR DOCUMENTOS -->
+    <bpmn:sendTask id="Task_EnviarDocumentos" name="Enviar CCMEI e documentos para cliente"/>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_EnviarDocumentos" targetRef="ParallelGateway_TasksFinais"/>
+
+    <!-- GATEWAY PARALELO: TAREFAS PÓS-ABERTURA -->
+    <bpmn:parallelGateway id="ParallelGateway_TasksFinais" name="Tarefas pós-abertura"/>
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="ParallelGateway_TasksFinais" targetRef="Task_OrientarDAS"/>
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="ParallelGateway_TasksFinais" targetRef="Task_OrientarObrigacoes"/>
+
+    <!-- ORIENTAR SOBRE DAS-MEI -->
+    <bpmn:task id="Task_OrientarDAS" name="Orientar sobre pagamento do DAS-MEI mensal"/>
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_OrientarDAS" targetRef="ParallelGateway_Fim"/>
+
+    <!-- ORIENTAR OBRIGAÇÕES -->
+    <bpmn:task id="Task_OrientarObrigacoes" name="Orientar sobre obrigações anuais (DASN)"/>
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="Task_OrientarObrigacoes" targetRef="ParallelGateway_Fim"/>
+
+    <!-- GATEWAY PARALELO: CONVERGÊNCIA -->
+    <bpmn:parallelGateway id="ParallelGateway_Fim" name="Finalizar orientações"/>
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="ParallelGateway_Fim" targetRef="End_MEIAberto"/>
+
+    <!-- FINS -->
+    <bpmn:endEvent id="End_MEIAberto" name="MEI aberto com sucesso"/>
+    <bpmn:endEvent id="End_NaoPodeMEI" name="Cliente não pode ser MEI"/>
+
+  </bpmn:process>
+
+  <!-- DIAGRAMA VISUAL -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_MEIReal">
+    <bpmndi:BPMNPlane id="BPMNPlane_MEIReal" bpmnElement="ProcessoMEIReal">
+      
+      <!-- INÍCIO -->
+      <bpmndi:BPMNShape id="Start_SolicitacaoMEI_di" bpmnElement="Start_SolicitacaoMEI">
+        <omgdc:Bounds x="100" y="200" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="88" y="243" width="60" height="27"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- VERIFICAR REQUISITOS -->
+      <bpmndi:BPMNShape id="Task_VerificarRequisitos_di" bpmnElement="Task_VerificarRequisitos">
+        <omgdc:Bounds x="200" y="178" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- GATEWAY PODE SER MEI -->
+      <bpmndi:BPMNShape id="Gateway_PodeSerMEI_di" bpmnElement="Gateway_PodeSerMEI" isMarkerVisible="true">
+        <omgdc:Bounds x="350" y="193" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="336" y="250" width="78" height="27"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- FIM: NÃO PODE MEI -->
+      <bpmndi:BPMNShape id="End_NaoPodeMEI_di" bpmnElement="End_NaoPodeMEI">
+        <omgdc:Bounds x="357" y="80" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="342" y="123" width="66" height="27"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- CRIAR CONTA GOV.BR -->
+      <bpmndi:BPMNShape id="Task_CriarContaGovBr_di" bpmnElement="Task_CriarContaGovBr">
+        <omgdc:Bounds x="450" y="178" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- DEFINIR ATIVIDADE -->
+      <bpmndi:BPMNShape id="Task_DefinirAtividade_di" bpmnElement="Task_DefinirAtividade">
+        <omgdc:Bounds x="600" y="178" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- DEFINIR ENDEREÇO -->
+      <bpmndi:BPMNShape id="Task_DefinirEndereco_di" bpmnElement="Task_DefinirEndereco">
+        <omgdc:Bounds x="750" y="178" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- GATEWAY PRECISA LICENÇA -->
+      <bpmndi:BPMNShape id="Gateway_PrecisaLicenca_di" bpmnElement="Gateway_PrecisaLicenca" isMarkerVisible="true">
+        <omgdc:Bounds x="900" y="193" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="882" y="250" width="86" height="27"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- ORIENTAR LICENÇA -->
+      <bpmndi:BPMNShape id="Task_OrientarLicenca_di" bpmnElement="Task_OrientarLicenca">
+        <omgdc:Bounds x="875" y="78" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- PREENCHER PORTAL -->
+      <bpmndi:BPMNShape id="Task_PreencherPortal_di" bpmnElement="Task_PreencherPortal">
+        <omgdc:Bounds x="1050" y="178" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- GERAR CNPJ -->
+      <bpmndi:BPMNShape id="Task_GerarCNPJ_di" bpmnElement="Task_GerarCNPJ">
+        <omgdc:Bounds x="1200" y="178" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- ENVIAR DOCUMENTOS -->
+      <bpmndi:BPMNShape id="Task_EnviarDocumentos_di" bpmnElement="Task_EnviarDocumentos">
+        <omgdc:Bounds x="1350" y="178" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- GATEWAY PARALELO TASKS FINAIS -->
+      <bpmndi:BPMNShape id="ParallelGateway_TasksFinais_di" bpmnElement="ParallelGateway_TasksFinais">
+        <omgdc:Bounds x="1500" y="193" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1488" y="250" width="74" height="27"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- ORIENTAR DAS -->
+      <bpmndi:BPMNShape id="Task_OrientarDAS_di" bpmnElement="Task_OrientarDAS">
+        <omgdc:Bounds x="1600" y="100" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- ORIENTAR OBRIGAÇÕES -->
+      <bpmndi:BPMNShape id="Task_OrientarObrigacoes_di" bpmnElement="Task_OrientarObrigacoes">
+        <omgdc:Bounds x="1600" y="260" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- GATEWAY PARALELO FIM -->
+      <bpmndi:BPMNShape id="ParallelGateway_Fim_di" bpmnElement="ParallelGateway_Fim">
+        <omgdc:Bounds x="1750" y="193" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1738" y="250" width="74" height="27"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- FIM: MEI ABERTO -->
+      <bpmndi:BPMNShape id="End_MEIAberto_di" bpmnElement="End_MEIAberto">
+        <omgdc:Bounds x="1850" y="200" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="1833" y="243" width="70" height="27"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- FLUXOS -->
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <omgdi:waypoint x="136" y="218"/>
+        <omgdi:waypoint x="200" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <omgdi:waypoint x="300" y="218"/>
+        <omgdi:waypoint x="350" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <omgdi:waypoint x="375" y="193"/>
+        <omgdi:waypoint x="375" y="116"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <omgdi:waypoint x="400" y="218"/>
+        <omgdi:waypoint x="450" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <omgdi:waypoint x="550" y="218"/>
+        <omgdi:waypoint x="600" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <omgdi:waypoint x="700" y="218"/>
+        <omgdi:waypoint x="750" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <omgdi:waypoint x="850" y="218"/>
+        <omgdi:waypoint x="900" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <omgdi:waypoint x="925" y="193"/>
+        <omgdi:waypoint x="925" y="158"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <omgdi:waypoint x="950" y="218"/>
+        <omgdi:waypoint x="1050" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <omgdi:waypoint x="975" y="118"/>
+        <omgdi:waypoint x="1100" y="118"/>
+        <omgdi:waypoint x="1100" y="178"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <omgdi:waypoint x="1150" y="218"/>
+        <omgdi:waypoint x="1200" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <omgdi:waypoint x="1300" y="218"/>
+        <omgdi:waypoint x="1350" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <omgdi:waypoint x="1450" y="218"/>
+        <omgdi:waypoint x="1500" y="218"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <omgdi:waypoint x="1525" y="193"/>
+        <omgdi:waypoint x="1525" y="140"/>
+        <omgdi:waypoint x="1600" y="140"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15">
+        <omgdi:waypoint x="1525" y="243"/>
+        <omgdi:waypoint x="1525" y="300"/>
+        <omgdi:waypoint x="1600" y="300"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16">
+        <omgdi:waypoint x="1700" y="140"/>
+        <omgdi:waypoint x="1775" y="140"/>
+        <omgdi:waypoint x="1775" y="193"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17">
+        <omgdi:waypoint x="1700" y="300"/>
+        <omgdi:waypoint x="1775" y="300"/>
+        <omgdi:waypoint x="1775" y="243"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18">
+        <omgdi:waypoint x="1800" y="218"/>
+        <omgdi:waypoint x="1850" y="218"/>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>
