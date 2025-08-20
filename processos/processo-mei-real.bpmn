@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_MEIReal" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.6.1">
+  <bpmn:process id="ProcessoMEIReal" name="Processo Real de Abertura MEI" isExecutable="true">
+    <bpmn:startEvent id="Start_SolicitacaoMEI" name="Cliente solicita MEI">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_SolicitacaoMEI" targetRef="Task_VerificarRequisitos" />
+    
+    <bpmn:task id="Task_VerificarRequisitos" name="Verificar requisitos do cliente">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_VerificarRequisitos" targetRef="Gateway_PodeSerMEI" />
+    
+    <bpmn:exclusiveGateway id="Gateway_PodeSerMEI" name="Atende requisitos MEI?" default="Flow_4">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Gateway_PodeSerMEI" targetRef="End_NaoPodeMEI">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${environment.variables.podeSerMEI === false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Gateway_PodeSerMEI" targetRef="Task_CriarContaGovBr" />
+    
+    <bpmn:userTask id="Task_CriarContaGovBr" name="Criar/verificar conta gov.br do cliente">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_CriarContaGovBr" targetRef="Task_DefinirAtividade" />
+    
+    <bpmn:task id="Task_DefinirAtividade" name="Definir atividade econômica (CNAE)">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_DefinirAtividade" targetRef="Task_DefinirEndereco" />
+    
+    <bpmn:task id="Task_DefinirEndereco" name="Definir endereço (residencial ou comercial)">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_04aul7u</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_04aul7u" sourceRef="Task_DefinirEndereco" targetRef="Gateway_0oeqsv9" />
+    
+    <bpmn:exclusiveGateway id="Gateway_0oeqsv9" name="Endereço válido?" default="Flow_0wvx8t3">
+      <bpmn:incoming>Flow_04aul7u</bpmn:incoming>
+      <bpmn:outgoing>Flow_1utewma</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0wvx8t3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_1utewma" sourceRef="Gateway_0oeqsv9" targetRef="Activity_0duifpe">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${environment.variables.enderecoValido === false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:task id="Activity_0duifpe" name="Corrigir endereço do MEI">
+      <bpmn:incoming>Flow_1utewma</bpmn:incoming>
+      <bpmn:outgoing>Flow_0nxjnfa</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_0nxjnfa" sourceRef="Activity_0duifpe" targetRef="Event_12dapn0" />
+    
+    <bpmn:sequenceFlow id="Flow_0wvx8t3" sourceRef="Gateway_0oeqsv9" targetRef="Event_12dapn0" />
+    
+    <bpmn:intermediateThrowEvent id="Event_12dapn0" name="Documentos validados">
+      <bpmn:incoming>Flow_0wvx8t3</bpmn:incoming>
+      <bpmn:incoming>Flow_0nxjnfa</bpmn:incoming>
+      <bpmn:outgoing>Flow_1o04069</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    
+    <bpmn:sequenceFlow id="Flow_1o04069" sourceRef="Event_12dapn0" targetRef="Gateway_PrecisaLicenca" />
+    
+    <bpmn:exclusiveGateway id="Gateway_PrecisaLicenca" name="Atividade precisa licença municipal?" default="Flow_9">
+      <bpmn:incoming>Flow_1o04069</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Gateway_PrecisaLicenca" targetRef="Task_OrientarLicenca">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${environment.variables.precisaLicenca === true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Gateway_PrecisaLicenca" targetRef="Task_PreencherPortal" />
+    
+    <bpmn:task id="Task_OrientarLicenca" name="Orientar cliente sobre licenças necessárias">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_OrientarLicenca" targetRef="Task_PreencherPortal" />
+    
+    <bpmn:task id="Task_PreencherPortal" name="Preencher dados no Portal do Empreendedor">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_PreencherPortal" targetRef="Task_GerarCNPJ" />
+    
+    <bpmn:task id="Task_GerarCNPJ" name="Gerar CNPJ automaticamente (gratuito)">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_GerarCNPJ" targetRef="Task_EnviarDocumentos" />
+    
+    <bpmn:sendTask id="Task_EnviarDocumentos" name="Enviar CCMEI e documentos para cliente">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:sendTask>
+    
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_EnviarDocumentos" targetRef="ParallelGateway_TasksFinais" />
+    
+    <bpmn:parallelGateway id="ParallelGateway_TasksFinais" name="Tarefas pós-abertura">
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+      <bpmn:outgoing>Flow_15</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="ParallelGateway_TasksFinais" targetRef="Task_OrientarDAS" />
+    
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="ParallelGateway_TasksFinais" targetRef="Task_OrientarObrigacoes" />
+    
+    <bpmn:task id="Task_OrientarDAS" name="Orientar sobre pagamento do DAS-MEI mensal">
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_16</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_OrientarDAS" targetRef="ParallelGateway_Fim" />
+    
+    <bpmn:task id="Task_OrientarObrigacoes" name="Orientar sobre obrigações anuais (DASN)">
+      <bpmn:incoming>Flow_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_17</bpmn:outgoing>
+    </bpmn:task>
+    
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="Task_OrientarObrigacoes" targetRef="ParallelGateway_Fim" />
+    
+    <bpmn:parallelGateway id="ParallelGateway_Fim" name="Finalizar orientações">
+      <bpmn:incoming>Flow_16</bpmn:incoming>
+      <bpmn:incoming>Flow_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_18</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="ParallelGateway_Fim" targetRef="End_MEIAberto" />
+    
+    <bpmn:endEvent id="End_MEIAberto" name="MEI aberto com sucesso">
+      <bpmn:incoming>Flow_18</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:endEvent id="End_NaoPodeMEI" name="Cliente não pode ser MEI">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:terminateEventDefinition id="TerminateEventDefinition_1lthpar" />
+    </bpmn:endEvent>
+    
+  </bpmn:process> 
+</bpmn:definitions>
