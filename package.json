@@ -1,18 +1,20 @@
 {
   "name": "sistema-bpmn-mei",
   "version": "1.0.0",
-  "description": "Sistema BPMN para abertura automatizada de MEI",
-  "main": "index-mei.js",
+  "description": "Sistema BPMN para abertura automatizada de MEI com visualizador web",
+  "main": "main.js",
   "scripts": {
-    "start": "node index-mei.js",
-    "test:todos": "node index-mei.js",
+    "start": "node main.js",
+    "viewer": "node server.js",
+    "web": "node server.js",
+    "test:todos": "node main.js",
     "test:mei": "node testes/teste-mei.js",
-    "test:basico": "node index-mei.js clienteBasico",
-    "test:licenca": "node index-mei.js atividadeComLicenca",
-    "test:endereco": "node index-mei.js enderecoParaCorrigir",
-    "test:empresa": "node index-mei.js jaTemEmpresa",
-    "test:idade": "node index-mei.js menorIdade",
-    "ajuda": "node index-mei.js ajuda"
+    "test:basico": "node main.js clienteBasico",
+    "test:licenca": "node main.js atividadeComLicenca",
+    "test:endereco": "node main.js enderecoParaCorrigir",
+    "test:empresa": "node main.js jaTemEmpresa",
+    "test:idade": "node main.js menorIdade",
+    "ajuda": "node main.js ajuda"
   },
   "keywords": [
     "bpmn",
@@ -24,6 +26,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "bpmn-engine": "^25.0.0"
+    "bpmn-engine": "^25.0.0",
+    "express": "^4.21.2"
   }
 }
